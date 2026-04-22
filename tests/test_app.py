@@ -5,7 +5,7 @@ from src.app import app
 client = TestClient(app)
 
 def test_root_redirect():
-    response = client.get("/")
+    response = client.get("/", follow_redirects=False)
     assert response.status_code == 307  # Redirect
     assert response.headers["location"] == "/static/index.html"
 
@@ -26,7 +26,7 @@ def test_get_activities():
 
 def test_signup_success():
     email = "newstudent@mergington.edu"
-    response = client.post(f"/activities/Chess Club/signup", json={"email": email})
+    response = client.post(f"/activities/Chess Club/signup", params={"email": email})
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
@@ -39,16 +39,16 @@ def test_signup_success():
 def test_signup_already_signed_up():
     email = "duplicate@mergington.edu"
     # First signup
-    client.post(f"/activities/Programming Class/signup", json={"email": email})
+    client.post(f"/activities/Programming Class/signup", params={"email": email})
     # Try again
-    response = client.post(f"/activities/Programming Class/signup", json={"email": email})
+    response = client.post(f"/activities/Programming Class/signup", params={"email": email})
     assert response.status_code == 400
     data = response.json()
     assert "detail" in data
     assert "Student already signed up for this activity" == data["detail"]
 
 def test_signup_activity_not_found():
-    response = client.post("/activities/Nonexistent Activity/signup", json={"email": "test@mergington.edu"})
+    response = client.post("/activities/Nonexistent Activity/signup", params={"email": "test@mergington.edu"})
     assert response.status_code == 404
     data = response.json()
     assert "detail" in data
@@ -57,7 +57,7 @@ def test_signup_activity_not_found():
 def test_unregister_success():
     email = "unregister@mergington.edu"
     # First signup
-    client.post(f"/activities/Gym Class/signup", json={"email": email})
+    client.post(f"/activities/Gym Class/signup", params={"email": email})
     # Then unregister
     response = client.delete(f"/activities/Gym Class/signup", params={"email": email})
     assert response.status_code == 200
